@@ -1,0 +1,149 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>OffcutFit working prototype</title>
+<style>
+:root{--paper:#f3efe6;--sheet:#fffdf8;--ink:#1c2a27;--muted:#56645f;--line:#d7cfbf;--line-strong:#b9ae98;--pine:#e8c98a;--pine-edge:#c99d4f;--oak:#c79a62;--birch:#ead9b5;--kerf:#b8401a;--tail:#efe6d3;--accent:#1f5a47;--accent-ink:#ffffff;--ok:#1f6b4f;--warn:#9a5b06;--bad:#a3341b;--focus:#e0812b;--mono:ui-monospace,"SFMono-Regular",Menlo,Consolas,"Liberation Mono",monospace}
+*{box-sizing:border-box}
+html{background:var(--paper)}
+body{margin:0;font:17px/1.5 system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;color:var(--ink);background:var(--paper)}
+button,input,select,textarea{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--focus);outline-offset:2px}
+.top{border-bottom:1px solid var(--line);background:var(--sheet)}
+.top-inner{max-width:1240px;margin:0 auto;padding:22px 24px 18px;display:grid;grid-template-columns:auto 1fr;gap:6px 28px;align-items:end}
+h1{margin:0;font-size:34px;letter-spacing:-.02em;line-height:1;display:flex;align-items:center;gap:12px}
+h1::before{content:"";width:30px;height:30px;border-radius:4px;background:linear-gradient(90deg,var(--pine) 0 40%,var(--kerf) 40% 46%,var(--pine) 46% 74%,var(--tail) 74%);border:1.5px solid var(--ink)}
+.lede{margin:0;font-size:18px;color:var(--ink);max-width:640px}
+.badge{grid-column:1/-1;display:flex;flex-wrap:wrap;gap:8px 18px;align-items:baseline;margin:10px 0 0}
+.badge p{margin:0}
+.badge strong{display:inline-block;font-size:13px;letter-spacing:.04em;text-transform:uppercase;border:1.5px solid var(--ink);border-radius:999px;padding:3px 12px;background:#fff}
+.fine{font-size:14px;color:var(--muted)}
+main{max-width:1240px;margin:0 auto;padding:24px;display:grid;grid-template-columns:minmax(300px,380px) minmax(0,1fr);gap:24px;align-items:start}
+.rail{display:grid;gap:18px}
+.stage{display:grid;gap:18px}
+section{background:var(--sheet);border:1px solid var(--line);border-radius:10px;padding:20px}
+h2{margin:0 0 12px;font-size:19px;letter-spacing:-.01em}
+label{display:grid;gap:4px;font-size:14px;font-weight:600;color:var(--muted);margin:0 0 12px}
+textarea,input,select{width:100%;border:1.5px solid var(--line-strong);border-radius:8px;background:#fff;padding:10px 12px;font-size:16px;font-weight:400;color:var(--ink)}
+textarea{min-height:96px;resize:vertical}
+#pieces,#budget{font-family:var(--mono);font-size:16px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin:0 0 16px}
+.row2 label{margin:0}
+button{cursor:pointer;border-radius:8px;border:1.5px solid var(--ink);background:#fff;padding:10px 16px;font-weight:600;min-height:44px}
+button:hover{background:#f6f1e6}
+.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink);width:100%}
+.primary:hover{background:#174536}
+.note{font-size:14px;color:var(--muted);margin:0 0 12px;padding-left:12px;border-left:3px solid var(--line-strong)}
+#suggest{margin-top:10px}#suggestions{display:grid;gap:8px;margin-top:12px}
+#suggestions:empty{display:none}
+#suggestions button{text-align:left;font-weight:400;font-size:15px;line-height:1.4;border:1.5px solid var(--line-strong);background:#fff;padding:10px 12px;position:relative;padding-left:40px}
+#suggestions button::before{content:"";position:absolute;left:12px;top:13px;width:16px;height:16px;border-radius:3px;border:1.5px solid var(--ink);background:var(--pine)}
+#suggestions button:nth-child(1){border-color:var(--ink)}
+#suggestions button:hover{background:#fbf6ea}
+/* cut plan: the visual centre */
+.plan-panel{padding:24px 24px 26px;border-color:var(--line-strong);background:
+ linear-gradient(var(--sheet),var(--sheet)) padding-box,
+ linear-gradient(var(--line-strong),var(--line-strong)) border-box}
+.panel-label{margin:0 0 14px;font-size:13px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:12px}
+#plan{min-height:220px;position:relative}
+#plan:empty{border:2px dashed var(--line);border-radius:10px;background:
+ repeating-linear-gradient(90deg,transparent 0 59px,rgba(185,174,152,.25) 59px 60px),
+ linear-gradient(transparent 46%,var(--tail) 46% 58%,transparent 58%)}
+#plan:not(:empty):not(:has(.bar)){min-height:0;border:2px solid var(--bad);border-radius:10px;padding:16px 18px;background:#fbefe9;color:var(--bad);font-weight:600}
+.plan-meta{display:flex;flex-wrap:wrap;gap:8px;margin:0 0 10px}
+.chip{display:inline-flex;align-items:center;gap:8px;border:1.5px solid var(--ink);border-radius:999px;padding:3px 12px;font-size:14px;font-weight:600;background:#fff}
+.chip .sw{width:14px;height:14px;border-radius:3px;border:1px solid rgba(0,0,0,.4);background:var(--pine)}.chip .sw[data-material=oak]{background:var(--oak)}.chip .sw[data-material=birch_plywood]{background:var(--birch)}
+.chip.mono{font-family:var(--mono);font-weight:500}
+.plan-sum{margin:0 0 20px;font-size:18px;line-height:1.35;color:var(--muted)}
+.plan-sum .price{display:block;font-size:52px;line-height:1.05;letter-spacing:-.03em;color:var(--ink);font-weight:800;font-variant-numeric:tabular-nums;margin:2px 0 6px}
+.plan-sum b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums}.plan-sum .stat{white-space:nowrap}.plan-sum .sep{color:var(--line-strong);padding:0 .15em}.vh{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);clip-path:inset(50%);white-space:nowrap}
+.board{margin:0 0 18px}
+.board-head{display:flex;justify-content:space-between;align-items:baseline;gap:12px;margin:0 0 6px}
+.board-head p{margin:0;font-family:var(--mono);font-size:15px}
+.board-head .each{font-family:var(--mono);font-size:15px;font-weight:700;border-bottom:2px solid var(--ink);white-space:nowrap}
+.track{position:relative;padding-top:10px}
+.bar{height:52px;display:flex;align-items:stretch;border-radius:2px;overflow:hidden;background:var(--tail);box-shadow:0 0 0 1.5px var(--ink)}
+.bar>span{flex:none;min-width:0}
+.part{background:var(--pine);border-right:1.5px solid var(--ink);display:grid;place-items:center;font-family:var(--mono);font-size:15px;font-weight:700;min-width:0;overflow:hidden;white-space:nowrap;background-image:repeating-linear-gradient(90deg,transparent 0 22px,rgba(120,80,20,.12) 22px 23px)}
+.bar[data-material=oak] .part{background-color:var(--oak)}
+.bar[data-material=birch_plywood] .part{background-color:var(--birch)}
+.kerf{background:var(--kerf)}
+.kerf-mark{position:absolute;top:0;bottom:0;width:0;pointer-events:none}
+.kerf-mark::before{content:"";position:absolute;left:-5px;top:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:8px solid var(--kerf)}
+.kerf-mark::after{content:"";position:absolute;left:-.5px;top:8px;bottom:0;width:1px;background:var(--kerf)}
+.tail{display:grid;place-items:center;font-family:var(--mono);font-size:13px;color:var(--muted);min-width:0;overflow:hidden;white-space:nowrap;background:repeating-linear-gradient(135deg,var(--tail) 0 7px,#e2d6bd 7px 8px)}
+.scale{display:flex;justify-content:space-between;font-family:var(--mono);font-size:12px;color:var(--muted);margin-top:3px;border-top:1px solid var(--line-strong);padding-top:2px}
+.legend{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0 0;padding:0;list-style:none;font-size:13px;color:var(--muted)}
+.legend li{display:flex;align-items:center;gap:6px}
+.legend i{width:16px;height:12px;border:1px solid var(--ink);display:inline-block}
+.legend .lp{background:var(--pine)}.legend[data-material=oak] .lp{background:var(--oak)}.legend[data-material=birch_plywood] .lp{background:var(--birch)}.legend .lk{border:0;width:12px;height:14px;background:linear-gradient(var(--kerf),var(--kerf)) 50% 7px/1px 7px no-repeat;position:relative}.legend .lk::before{content:"";position:absolute;left:1px;top:0;border-left:5px solid transparent;border-right:5px solid transparent;border-top:7px solid var(--kerf)}.legend .lt{background:repeating-linear-gradient(135deg,var(--tail) 0 3px,#d9cbb0 3px 4px)}
+body[data-checkout=changed] #plan:has(.bar){opacity:.42;filter:grayscale(.6)}
+/* checkout */
+.checkout{border-width:1.5px;border-color:var(--ink)}
+#payment-state{margin:0 0 14px;padding:14px 16px 14px 44px;border-radius:8px;position:relative;font-weight:600;background:#f1ece1;border:1.5px solid var(--line-strong)}
+#payment-state::before{content:"";position:absolute;left:16px;top:18px;width:14px;height:14px;border-radius:50%;background:var(--line-strong)}
+#payment-state[data-tone=ready]{background:#eaf3ee;border-color:var(--ok)}#payment-state[data-tone=ready]::before{background:var(--ok)}
+#payment-state[data-tone=result]{background:#eef0f6;border-color:#3b4f7a}#payment-state[data-tone=result]::before{background:#3b4f7a}
+#payment-state[data-tone=changed],#payment-state[data-tone=blocked]{background:#fbf2e2;border-color:var(--warn)}#payment-state[data-tone=changed]::before,#payment-state[data-tone=blocked]::before{background:var(--warn)}
+#payment-state[data-tone=alert]{background:#fbefe9;border-color:var(--bad)}#payment-state[data-tone=alert]::before{background:var(--bad);border-radius:2px}
+#paypal-buttons:empty{display:none}
+#paypal-buttons{margin:0 0 14px;padding:12px;border:1.5px dashed var(--line-strong);border-radius:8px;background:#fff}
+.checkout .fine-print{font-size:14px;color:var(--muted);margin:0 0 14px}
+.after{display:flex;flex-wrap:wrap;gap:8px;padding-top:14px;border-top:1px dashed var(--line-strong)}
+.after button{font-size:15px;min-height:40px;padding:8px 14px}
+.after #cancel{border-color:var(--bad);color:var(--bad)}
+@media (max-width:900px){main{grid-template-columns:1fr;padding:16px}.top-inner{grid-template-columns:1fr;padding:16px}.plan-sum .price{font-size:40px}h1{font-size:30px}}
+@media (max-width:480px){.badge strong{border-radius:12px}.row2{grid-template-columns:1fr}.bar{height:46px}.part{font-size:13px}}
+@media (prefers-reduced-motion:no-preference){#plan,.bar{transition:opacity .2s,filter .2s}}
+</style>
+<header class="top"><div class="top-inner"><h1>OffcutFit</h1><p class="lede">Tell a small workshop what you want to make. Buy remnants that can actually fit your cut list.</p><div class="badge"><p><strong>Working prototype · invented inventory · PayPal sandbox only</strong></p><p class="fine">One workshop, collection only. Material price includes the demo cutting service; no delivery charge. Lengths follow the existing grain direction, without rotation or joining.</p></div></div></header>
+<main>
+<div class="rail">
+<section><h2>1. Describe the project</h2><textarea id="query" aria-label="Describe the project">An inexpensive painted indoor craft and a small plant stand</textarea><button id="suggest">Suggest a material</button><div id="suggestions" aria-live="polite"></div></section>
+<section><h2>2. Fit the pieces</h2><label>Material <select id="material"><option value="pine">Pine</option><option value="oak">Oak</option><option value="birch_plywood">Birch plywood</option></select></label><p class="note">Fixed pilot cross-section: 90 × 18 mm. This tool does not certify structural suitability.</p><div class="row2"><label>Lengths in mm <input id="pieces" value="500, 500, 350"></label><label>Budget USD <input id="budget" type="number" value="15" step="0.01" min="0.01"></label></div><button id="fit" class="primary">Find a complete cut plan</button></section>
+</div>
+<div class="stage">
+<section class="plan-panel" aria-label="Cut plan"><p class="panel-label" aria-hidden="true"><span>Cut plan</span></p><div id="plan" aria-live="polite"></div></section>
+<section class="checkout"><h2>3. Choose and pay</h2><p id="payment-state">Payment is unavailable until a complete plan and sandbox credentials are present.</p><div id="paypal-buttons"></div><p class="fine-print">Buying whole remnants includes their remaining tails. Demo total includes cutting; collection only, no additional demo tax or fees.</p><div class="after"><button id="reconcile">Check last checkout</button><button id="cancel">Cancel last checkout</button></div></section>
+</div>
+</main>
+<script>
+let quote=null, config=null, buttons=null;
+let lastCheckout=localStorage.getItem('offcutfit-last-checkout');
+const $=s=>document.querySelector(s);
+for(const field of ['#material','#pieces','#budget'])$(field).addEventListener('input',()=>{quote=null;$('#paypal-buttons').replaceChildren();say($('#payment-state'),'The request changed. Generate a new cut plan before paying.');});
+async function api(path,data){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data)});const d=await r.json();if(!r.ok)throw Error(d.error);return d;}
+function say(el,text){el.textContent=text;}
+function remember(qid){lastCheckout=qid;localStorage.setItem('offcutfit-last-checkout',qid);}
+function forget(){lastCheckout=null;localStorage.removeItem('offcutfit-last-checkout');}
+async function checkoutAction(action,qid=lastCheckout){if(!qid){say($('#payment-state'),'No saved checkout to check.');return;}try{const d=await api('/api/'+action,{quote_id:qid});say($('#payment-state'),`Sandbox checkout: ${d.status}. ${d.action||''}`);if(['checkout-cancelled','sandbox-voided','closed','already-captured','sandbox-captured'].includes(d.status))forget();}catch(e){say($('#payment-state'),e.message);}}
+$('#reconcile').onclick=()=>checkoutAction('reconcile');
+$('#cancel').onclick=()=>checkoutAction('cancel');
+$('#suggest').onclick=async()=>{try{const d=await api('/api/suggest',{query:$('#query').value});const box=$('#suggestions');box.replaceChildren();for(const m of d.suggestions){const b=document.createElement('button');b.textContent=m.description;b.onclick=()=>{$('#material').value=m.material;quote=null;$('#plan').replaceChildren();$('#paypal-buttons').replaceChildren();say($('#payment-state'),'Material changed. Generate a new cut plan before paying.');};box.append(b);} }catch(e){say($('#suggestions'),e.message);}};
+$('#fit').onclick=async()=>{try{quote=null;$('#paypal-buttons').replaceChildren();const p=await api('/api/quote',{pieces_mm:$('#pieces').value.split(',').map(x=>Number(x.trim())),material:$('#material').value,max_cents:Math.round(Number($('#budget').value)*100)});const box=$('#plan');box.replaceChildren();if(!p.feasible){say(box,p.reason);say($('#payment-state'),'No complete plan; no payment order.');return;}quote=p;drawPlan(box,p);await payment();}catch(e){say($('#plan'),e.message);}};
+async function payment(){config=config||await(await fetch('/api/config')).json();if(!config.client_id){say($('#payment-state'),'Plan is ready. PayPal sandbox credentials are not configured; no PayPal call has been made.');return;}say($('#payment-state'),'Review this exact cut plan. The following button uses sandbox money.');if(!window.paypal){await new Promise((resolve,reject)=>{const s=document.createElement('script');s.src='https://www.paypal.com/sdk/js?client-id='+encodeURIComponent(config.client_id)+'&currency=USD&intent=capture';s.onload=resolve;s.onerror=reject;document.head.append(s);});}const selected=quote;buttons=paypal.Buttons({createOrder:async()=>{remember(selected.quote_id);const d=await api('/api/order',{quote_id:selected.quote_id});return d.id;},onApprove:async()=>{try{const d=await api('/api/capture',{quote_id:selected.quote_id});say($('#payment-state'),`Sandbox result: ${d.status}. No real money charged.`);forget();}catch(e){say($('#payment-state'),`${e.message} Use Check last checkout before trying again.`);}},onCancel:()=>checkoutAction('cancel',selected.quote_id),onError:()=>say($('#payment-state'),'Sandbox checkout failed. Use Check last checkout before retrying.')});buttons.render('#paypal-buttons');}
+// Display only: draws the server's stored plan. Same summary and bar strings as before; no request, amount or checkout logic here.
+function drawPlan(box,p){
+  const el=(tag,cls,text)=>{const n=document.createElement(tag);if(cls)n.className=cls;if(text!==undefined)n.textContent=text;return n;};
+  const meta=el('div','plan-meta');const opt=[...$('#material').options].find(o=>o.value===p.material);
+  const chip=el('span','chip');const sw=el('span','sw');sw.dataset.material=p.material;chip.append(sw,document.createTextNode(opt?opt.textContent:p.material));
+  meta.append(chip,el('span','chip mono',`${p.cross_section_mm.join(' × ')} mm`));box.append(meta);
+  const h=el('p','plan-sum');const st1=el('span','stat');st1.append('saw loss ',el('b','',`${p.kerf_loss_mm} mm`));const st2=el('span','stat');st2.append('retained tails ',el('b','',`${p.retained_tail_mm} mm`));h.append('Complete plan: ',el('span','price',`$${(p.price_cents/100).toFixed(2)}`),el('span','vh',' · '),st1,el('span','sep',' · '),st2);box.append(h);
+  const longest=Math.max(...p.bars.map(b=>b.length_mm));
+  for(const bar of p.bars){
+    const fig=el('div','board');const head=el('div','board-head');
+    head.append(el('p','',`${bar.id}: ${bar.length_mm} mm → ${bar.cuts_mm.join(' + ')} mm`),el('span','each',`$${(bar.price_cents/100).toFixed(2)}`));fig.append(head);
+    // One mm scale for every segment: width = server mm / remnant length; bar width = remnant length / longest remnant.
+    const L=bar.length_mm,pct=mm=>(100*mm/L)+'%';
+    const track=el('div','track');track.style.width=(100*L/longest)+'%';
+    const line=el('div','bar');line.dataset.material=p.material;track.append(line);
+    const kerfs=p.kerf_mm?Math.round(bar.kerf_loss_mm/p.kerf_mm):0,kerfEach=kerfs?bar.kerf_loss_mm/kerfs:0;
+    let left=kerfs,at=0;
+    for(const n of bar.cuts_mm){const seg=el('span','part',n);seg.style.width=pct(n);line.append(seg);at+=n;
+      if(left>0){left--;const k=el('span','kerf');k.setAttribute('aria-hidden','true');k.style.width=pct(kerfEach);line.append(k);
+        const mk=el('span','kerf-mark');mk.setAttribute('aria-hidden','true');mk.style.left=pct(at+kerfEach/2);track.append(mk);at+=kerfEach;}}
+    if(bar.tail_mm>0){const t=el('span','tail',bar.tail_mm);t.style.width=pct(bar.tail_mm);line.append(t);}
+    fig.append(track);const sc=el('div','scale');sc.style.width=track.style.width;sc.setAttribute('aria-hidden','true');sc.append(el('span','','0'),el('span','',`${bar.length_mm}`));fig.append(sc);box.append(fig);
+  }
+  const lg=el('ul','legend');lg.dataset.material=p.material;lg.setAttribute('aria-hidden','true');for(const [c,t] of [['lp','cut piece'],['lk','saw kerf (marker shows position; width to mm scale)'],['lt','buyer-owned tail']]){const li=el('li');li.append(el('i',c),t);lg.append(li);}box.append(lg);
+}
+// Display only: colours the checkout status line from its existing text; it never changes that text or any checkout step.
+(()=>{const s=$('#payment-state');const tone=t=>/^(Plan is ready|Review this exact cut plan)/.test(t)?'ready':/^Sandbox (result|checkout):/.test(t)?'result':/^(The request changed|Material changed)/.test(t)?'changed':/^No complete plan/.test(t)?'blocked':/^(Payment is unavailable|No saved checkout)/.test(t)?'idle':'alert';const set=()=>{s.dataset.tone=tone(s.textContent);document.body.dataset.checkout=s.dataset.tone;};new MutationObserver(set).observe(s,{childList:true,characterData:true,subtree:true});set();})();
+</script></html>

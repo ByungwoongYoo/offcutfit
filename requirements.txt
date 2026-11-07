@@ -1,0 +1,6 @@
+scikit-learn==1.8.0
+# Optional local semantic model (the TF-IDF CPU baseline works without these):
+transformers==4.57.3
+torch>=2.6
+huggingface-hub==0.36.0
+safetensors==0.6.2
